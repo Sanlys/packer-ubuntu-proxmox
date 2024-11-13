@@ -8,45 +8,52 @@ packer {
 }
 
 source "proxmox-iso" "ubuntu-template" {
+  proxmox_url              = "https://10.0.5.101:8006/api2/json"
+  insecure_skip_tls_verify = true
+  node                     = "pve1"
+  vm_name                  = "vagrant"
+  template_name            = "ubuntu-2204"
+  template_description     = "Ubuntu 22.04, generated on ${timestamp()}"
+
+  cloud_init              = true
+  cloud_init_storage_pool = "local-lvm"
+
+  qemu_agent      = true
+  scsi_controller = "virtio-scsi-pci"
+
   disks {
-    disk_size    = "10G"
-    storage_pool = "local-lvm"
-    type         = "scsi"
-    format       = "raw"
+    disk_size         = "10G"
+    storage_pool      = "local-lvm"
+    type              = "sata"
+    storage_pool_type = "lvm"
+    format            = "raw"
   }
   boot_iso {
-    iso_file = "ceph-iso:iso/ubuntu-24.04.1-live-server-amd64.iso"
+    iso_file = "ceph-iso:iso/ubuntu-22.04.5-live-server-amd64.iso"
+    unmount  = true
   }
   network_adapters {
     bridge = "vmbr0"
     model  = "virtio"
   }
-  cores          = 4
-  memory         = 1024
-  http_directory = "config"
+
+  cores          = 1
+  memory         = 2048
+  http_directory = "http"
+  boot           = "c"
+  boot_wait      = "10s"
   boot_command = [
     "<esc><wait>",
-    "<esc><wait>",
-    "<enter><wait>",
-    "/install/vmlinuz<wait>",
-    " initrd=/install/initrd.gz",
-    " auto-install/enable=true",
-    " debconf/priority=critical",
-    " fb=false debconf/frontend=noninteractive ",
-    " keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-    " keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-    " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
-    " -- <enter>"
+    "e<wait>",
+    "<down><down><down><end>",
+    "<bs><bs><bs><bs><wait>",
+    "autoinstall ds=nocloud-net\\;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ ---<wait>",
+    "<f10><wait>"
   ]
-  boot_wait                = "2m"
-  proxmox_url              = "https://pve1.s1.lan:8006/api2/json"
-  node                     = "pve1"
-  insecure_skip_tls_verify = true
-  ssh_password             = "vagrant"
-  ssh_timeout              = "15m"
-  ssh_username             = "vagrant"
-  template_description     = "Ubuntu 20.04, generated on ${timestamp()}"
-  template_name            = "ubuntu-2004"
+
+  ssh_username = "packer"
+  ssh_password = "packer"
+  ssh_timeout  = "15m"
 }
 
 build {
