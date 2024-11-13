@@ -8,10 +8,9 @@ packer {
 }
 
 source "proxmox-iso" "ubuntu-template" {
-  proxmox_url              = "https://10.0.5.101:8006/api2/json"
+  proxmox_url              = "https://pve1.s1.lan:8006/api2/json"
   insecure_skip_tls_verify = true
   node                     = "pve1"
-  vm_name                  = "vagrant"
   template_name            = "ubuntu-2204"
   template_description     = "Ubuntu 22.04, generated on ${timestamp()}"
 
