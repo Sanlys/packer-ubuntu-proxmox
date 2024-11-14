@@ -8,9 +8,10 @@ packer {
 }
 
 source "proxmox-iso" "ubuntu-template" {
-  proxmox_url              = "https://pve1.s1.lan:8006/api2/json"
+  proxmox_url              = "https://10.0.5.101:8006/api2/json"
   insecure_skip_tls_verify = true
   node                     = "pve1"
+  vm_name                  = "vagrant"
   template_name            = "ubuntu-2204"
   template_description     = "Ubuntu 22.04, generated on ${timestamp()}"
 
@@ -56,5 +57,30 @@ source "proxmox-iso" "ubuntu-template" {
 }
 
 build {
+  name    = "vagrant"
   sources = ["source.proxmox-iso.ubuntu-template"]
+
+  provisioner "shell" {
+    inline = [
+      "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done",
+      "sudo rm /etc/ssh/ssh_host_*",
+      "sudo truncate -s 0 /etc/machine-id",
+      "sudo apt -y autoremove --purge",
+      "sudo apt -y clean",
+      "sudo apt -y autoclean",
+      "sudo cloud-init clean",
+      "sudo rm -f /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg",
+      "sudo rm -f /etc/netplan/00-installer-config.yaml",
+      "sudo sync"
+    ]
+  }
+
+  provisioner "file" {
+    source      = "files/99-pve.cfg"
+    destination = "/tmp/99-pve.cfg"
+  }
+
+  provisioner "shell" {
+    inline = ["sudo cp /tmp/99-pve.cfg /etc/cloud/cloud.cfg.d/99-pve.cfg"]
+  }
 }

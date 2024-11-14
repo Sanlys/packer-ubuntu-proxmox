@@ -14,6 +14,7 @@ autoinstall:
   packages:
     - qemu-guest-agent
     - sudo
+    - docker.io
   storage:
     layout:
       name: direct
@@ -22,9 +23,11 @@ autoinstall:
   user-data:
     package_upgrade: false
     timezone: Europe/Oslo
+    groups:
+      - docker
     users:
       - name: packer
-        groups: [adm, sudo]
+        groups: [adm, sudo, docker]
         lock-passwd: false
         sudo: ALL=(ALL) NOPASSWD:ALL
         shell: /bin/bash
@@ -33,3 +36,6 @@ autoinstall:
         # - or -
         # ssh_authorized_keys:
         #   - your-ssh-key
+  system_info:
+    default_user:
+      groups: [docker, adm, sudo]
